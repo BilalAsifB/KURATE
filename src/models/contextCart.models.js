@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const contextCartSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true,
+    index: true,
   },
   document: {
     type: mongoose.Schema.Types.ObjectId,

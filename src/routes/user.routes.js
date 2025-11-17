@@ -63,6 +63,7 @@ router.route("/verify-otp").post(
 )
 
 router.route("/change-password").post(
+    verifyOTPLimiter,
     changePassword
 )
 
