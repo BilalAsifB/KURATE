@@ -124,7 +124,7 @@ const loginUser = asyncHandler(async (req, res) => {
         new APIResponse(
             200, 
             responseData,
-            "Login successful. Please complete your profile." : 
+            "Login successful. Please complete your profile.",
             "Login successful")
     )
 })
