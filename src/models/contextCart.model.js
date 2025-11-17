@@ -1,0 +1,38 @@
+const mongoose = require('mongoose');
+
+const contextCartSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  document: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Document'
+  },
+  name: {
+    type: String,
+    default: 'Untitled Cart'
+  },
+  snippets: [
+    {
+      type: {
+        type: String,
+        enum: ['text', 'table', 'image']
+      },
+      content: {
+        type: String // The raw text, markdown table, or image URL
+      },
+      sourceSection: {
+        type: String // e.g., "Chapter 1"
+      }
+    }
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const ContextCart = mongoose.model('ContextCart', contextCartSchema);
+
+module.exports = ContextCart;
