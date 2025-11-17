@@ -1,0 +1,173 @@
+{
+  "info": {
+    "_postman_id": "kurate-auth-collection",
+    "name": "KURATE - Auth & Password Reset (OTP)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Requests to test Register, Login, Refresh, Logout and the 3-step password reset (OTP) flow. Includes test scripts to save tokens and userId as collection variables."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api/users", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "otp", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@nu.edu.pk\",\n  \"password\": \"Password1!\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/register", "host": ["{{baseUrl}}"], "path": ["register"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@nu.edu.pk\",\n  \"password\": \"Password1!\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "// Attempt to extract tokens and userId from common response shapes",
+              "if (res) {",
+              "  // If APIResponse wrapper used: data.accessToken, data.refreshToken, data.user._id",
+              "  const data = res.data || res;",
+              "  if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+              "  if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);",
+              "  if (data.user && data.user._id) pm.collectionVariables.set('userId', data.user._id);",
+              "  // Some endpoints return accessToken at top-level in older implementations",
+              "  if (res.accessToken) pm.collectionVariables.set('accessToken', res.accessToken);",
+              "  if (res.refreshToken) pm.collectionVariables.set('refreshToken', res.refreshToken);",
+              "  if (res.user && res.user._id) pm.collectionVariables.set('userId', res.user._id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refresh Access Token",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+        "url": { "raw": "{{baseUrl}}/refresh-token", "host": ["{{baseUrl}}"], "path": ["refresh-token"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res) {",
+              "  const data = res.data || res;",
+              "  if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+              "  if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/logout", "host": ["{{baseUrl}}"], "path": ["logout"] }
+      }
+    },
+    {
+      "name": "Forgot Password (Request OTP)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@nu.edu.pk\"\n}" },
+        "url": { "raw": "{{baseUrl}}/forgot-password", "host": ["{{baseUrl}}"], "path": ["forgot-password"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "// Save userId returned in data.userId or data.user._id or res.data",
+              "if (res) {",
+              "  const userId = (res.data && res.data.userId) || (res.data && res.data.user && res.data.user._id) || res.userId || (res.user && res.user._id);",
+              "  if (userId) pm.collectionVariables.set('userId', userId);",
+              "  // Inform user to check email for OTP — OTP must be provided manually or from logs",
+              "  console.log('If email delivered, copy OTP into {{otp}} variable for Verify OTP step.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"otp\": \"{{otp}}\"\n}" },
+        "url": { "raw": "{{baseUrl}}/verify-otp", "host": ["{{baseUrl}}"], "path": ["verify-otp"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res) {",
+              "  // If verification returns a flag or userId, can handle here",
+              "  console.log('OTP verify response:', res);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Change Password (after OTP)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"newPassword\": \"NewPass1!\",\n  \"confirmPassword\": \"NewPass1!\"\n}" },
+        "url": { "raw": "{{baseUrl}}/change-password", "host": ["{{baseUrl}}"], "path": ["change-password"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res) console.log('Password change response:', res);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
