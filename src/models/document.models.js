@@ -26,8 +26,6 @@ const documentSchema = new mongoose.Schema({
     enum: ['processing', 'ready', 'error'],
     default: 'processing'
   },
-
-  // This is the most important part:
   parsedContent: {
     toc: [
       // Table of Contents
@@ -56,6 +54,4 @@ const documentSchema = new mongoose.Schema({
   }
 });
 
-const Document = mongoose.model('Document', documentSchema);
-
-module.exports = Document;
+export const Document = mongoose.model('Document', documentSchema);

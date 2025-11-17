@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.models.js";
 import { APIResponse } from "../utils/APIResponse.js";
 import jwt from "jsonwebtoken";
-import { sendPasswordResetEmail, sendConfirmationEmail, sendOTPEmail } from "../utils/emailService.js";
+import { sendConfirmationEmail, sendOTPEmail } from "../utils/emailService.js";
 import crypto from "crypto";
 
 // cookies are only server modifiable
@@ -110,16 +110,10 @@ const loginUser = asyncHandler(async (req, res) => {
         "-password -refreshToken"
     )
 
-    const profileIncomplete = !loggedInUser.isProfileCompleted
-
     const responseData = {
         user: loggedInUser,
         accessToken,
         refreshToken
-    }
-
-    if (profileIncomplete) {
-        responseData.profileIncomplete = true
     }
 
     return res.status(200).cookie(
@@ -130,7 +124,6 @@ const loginUser = asyncHandler(async (req, res) => {
         new APIResponse(
             200, 
             responseData,
-            profileIncomplete ? 
             "Login successful. Please complete your profile." : 
             "Login successful")
     )
@@ -200,8 +193,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
-
-
 const forgetPassword = asyncHandler(async (req, res) => {
     const { email } = req.body
 
@@ -247,6 +238,59 @@ const forgetPassword = asyncHandler(async (req, res) => {
 
         throw new ApiError(500, "Failed to send OTP email. Please try again later.")
     }
+})
+
+const verifyOTP = asyncHandler(async (req, res) => {
+    const { userId, otp } = req.body
+
+    // Validate inputs
+    if (!userId || userId?.trim() === "") {
+        throw new ApiError(400, "User ID is required")
+    }
+
+    if (!otp || otp?.trim() === "") {
+        throw new ApiError(400, "OTP is required")
+    }
+
+    // Find user by ID
+    const user = await User.findById(userId)
+
+    if (!user) {
+        throw new ApiError(404, "User not found")
+    }
+
+    // Check if OTP is expired
+    if (!user.otpExpires || user.otpExpires < Date.now()) {
+        throw new ApiError(400, "OTP has expired. Please request a new one.")
+    }
+
+    // Check max OTP attempts (max 5 attempts)
+    if (user.otpAttempts >= 5) {
+        // Clear OTP after max attempts
+        user.otp = undefined
+        user.otpExpires = undefined
+        user.otpAttempts = 0
+        await user.save({ validateBeforeSave: false })
+        throw new ApiError(429, "Too many OTP verification attempts. Please request a new OTP.")
+    }
+
+    // Verify OTP
+    if (user.otp !== otp.trim()) {
+        user.otpAttempts += 1
+        await user.save({ validateBeforeSave: false })
+        throw new ApiError(400, `Incorrect OTP. ${5 - user.otpAttempts} attempts remaining.`)
+    }
+
+    // OTP is correct
+    user.otpVerified = true
+    user.otp = undefined
+    user.otpExpires = undefined
+    user.otpAttempts = 0
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200).json(
+        new APIResponse(200, { verified: true }, "OTP verified successfully. You can now change your password.")
+    )
 })
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -316,115 +360,6 @@ const resetPassword = asyncHandler(async (req, res) => {
     )
 })
 
-const verifyOTP = asyncHandler(async (req, res) => {
-    const { userId, otp } = req.body
-
-    // Validate inputs
-    if (!userId || userId?.trim() === "") {
-        throw new ApiError(400, "User ID is required")
-    }
-
-    if (!otp || otp?.trim() === "") {
-        throw new ApiError(400, "OTP is required")
-    }
-
-    // Find user by ID
-    const user = await User.findById(userId)
-
-    if (!user) {
-        throw new ApiError(404, "User not found")
-    }
-
-    // Check if OTP is expired
-    if (!user.otpExpires || user.otpExpires < Date.now()) {
-        throw new ApiError(400, "OTP has expired. Please request a new one.")
-    }
-
-    // Check max OTP attempts (max 5 attempts)
-    if (user.otpAttempts >= 5) {
-        // Clear OTP after max attempts
-        user.otp = undefined
-        user.otpExpires = undefined
-        user.otpAttempts = 0
-        await user.save({ validateBeforeSave: false })
-        throw new ApiError(429, "Too many OTP verification attempts. Please request a new OTP.")
-    }
-
-    // Verify OTP
-    if (user.otp !== otp.trim()) {
-        user.otpAttempts += 1
-        await user.save({ validateBeforeSave: false })
-        throw new ApiError(400, `Incorrect OTP. ${5 - user.otpAttempts} attempts remaining.`)
-    }
-
-    // OTP is correct
-    user.otpVerified = true
-    user.otp = undefined
-    user.otpExpires = undefined
-    user.otpAttempts = 0
-    await user.save({ validateBeforeSave: false })
-
-    return res.status(200).json(
-        new APIResponse(200, { verified: true }, "OTP verified successfully. You can now change your password.")
-    )
-})
-
-const changePassword = asyncHandler(async (req, res) => {
-    const { userId, newPassword, confirmPassword } = req.body
-
-    // Validate inputs
-    if (!userId || userId?.trim() === "") {
-        throw new ApiError(400, "User ID is required")
-    }
-
-    if (!newPassword || newPassword?.trim() === "") {
-        throw new ApiError(400, "New password is required")
-    }
-
-    if (!confirmPassword || confirmPassword?.trim() === "") {
-        throw new ApiError(400, "Password confirmation is required")
-    }
-
-    if (newPassword !== confirmPassword) {
-        throw new ApiError(400, "Passwords do not match")
-    }
-
-    // Password validation: min 8 characters, one capital, one special char, alphanumeric
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-    if (!passwordRegex.test(newPassword.trim())) {
-        throw new ApiError(400, "Password does not meet requirements. It must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.")
-    }
-
-    // Find user
-    const user = await User.findById(userId)
-
-    if (!user) {
-        throw new ApiError(404, "User not found")
-    }
-
-    // Check if OTP was verified
-    if (!user.otpVerified) {
-        throw new ApiError(400, "Please verify your OTP first before changing password")
-    }
-
-    // Update password
-    user.password = newPassword.trim()
-    user.otpVerified = false
-    await user.save()
-
-    try {
-        // Send confirmation email
-        await sendConfirmationEmail(user.email, user.name)
-    } catch (error) {
-        console.error("Failed to send confirmation email:", error)
-        // Don't throw error here since password change was successful
-    }
-
-    return res.status(200).json(
-        new APIResponse(200, {}, "Password has been changed successfully. Please log in with your new password.")
-    )
-})
-
 export { 
     registerUser,
     loginUser,
@@ -432,5 +367,5 @@ export {
     refreshAccessToken,
     forgetPassword,
     verifyOTP,
-    changePassword
+    resetPassword,
 }

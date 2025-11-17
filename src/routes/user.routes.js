@@ -1,7 +1,15 @@
 import { Router } from "express";
-import { refreshAccessToken, registerUser, loginUser, logOutUser, forgetPassword, verifyOTP, changePassword } from "../controllers/user.controllers.js";
+import { 
+    refreshAccessToken, 
+    registerUser, 
+    loginUser, 
+    logOutUser, 
+    forgetPassword, 
+    resetPassword,
+    verifyOTP, 
+} from "../controllers/user.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
-import rateLimit from  "express-rate-limit";
+import rateLimit from "express-rate-limit";
 
 const registerLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -62,9 +70,9 @@ router.route("/verify-otp").post(
     verifyOTP
 )
 
-router.route("/change-password").post(
+router.route("/reset-password").post(
     verifyOTPLimiter,
-    changePassword
+    resetPassword
 )
 
 // secured routes

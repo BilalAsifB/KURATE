@@ -35,6 +35,4 @@ const contextCartSchema = new mongoose.Schema({
   }
 });
 
-const ContextCart = mongoose.model('ContextCart', contextCartSchema);
-
-module.exports = ContextCart;
+export const ContextCart = mongoose.model('ContextCart', contextCartSchema);
