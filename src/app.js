@@ -24,9 +24,10 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/users", userRouter);
+app.use("/api/documents", documentRouter);
 
 // Basic health check route
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
     res.json({
         success: true,
         message: "Kurate Server is running"
@@ -34,7 +35,7 @@ app.get("/", (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, _, res) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
@@ -49,7 +50,7 @@ app.use((err, req, res, next) => {
 });
 
 // 404 Not Found middleware
-app.use((req, res) => {
+app.use((_, res) => {
     res.status(404).json({
         success: false,
         statusCode: 404,
