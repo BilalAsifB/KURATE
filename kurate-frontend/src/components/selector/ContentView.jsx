@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import DOMPurify from "dompurify";
 
 export default function ContentView({ content, sectionTitle, onAddSnippet }) {
   const [selectedText, setSelectedText] = useState('');
@@ -70,7 +71,7 @@ export default function ContentView({ content, sectionTitle, onAddSnippet }) {
               prose-code:font-mono prose-code:text-sm prose-code:bg-indigo-50 prose-code:px-2 prose-code:py-1 prose-code:rounded
               prose-pre:bg-gray-900 prose-pre:text-gray-100
               "
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(content) }}
           />
         ) : (
           <div className="flex items-center justify-center h-full">

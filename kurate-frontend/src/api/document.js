@@ -11,7 +11,7 @@ export const documentAPI = {
         return response.data;
     },
 
-    uploadDocument: async (file, onIploadProgress) => {
+    uploadDocument: async (file, onUploadProgress) => {
         const formData = new FormData();
         formData.append("file", file);
 
