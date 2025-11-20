@@ -1,4 +1,4 @@
-import { ApiError } from "../utils/ApiError.js"
+import { APIError } from "../utils/APIError.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.models.js";
@@ -9,7 +9,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         req.header("Authorization")?.replace("Bearer ", "")
     
         if (!accessToken) {
-            throw new ApiError(401, "Unauthorized access")
+            throw new APIError(401, "Unauthorized access")
         }
     
         const decodedToken = jwt.verify(
@@ -21,12 +21,12 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         .select("-password -refreshToken")
     
         if (!user) {
-            throw new ApiError(401, "Unauthorized access")
+            throw new APIError(401, "Unauthorized access")
         }
     
         req.user = user
         next()
     } catch (error) {
-        throw new ApiError(401, error?.message || "Unauthorized access")
+        throw new APIError(401, error?.message || "Unauthorized access")
     }
 })
