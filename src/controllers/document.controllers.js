@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { APIError } from "../utils/APIError.js";
 import { APIResponse } from "../utils/APIResponse.js";
-import { Document } from "../models/document.model.js";
+import { Document } from "../models/document.models.js";
 import {
     parseEPUB,
     parsePDF,
@@ -11,11 +11,7 @@ import {
 import axios from "axios";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
-import fs, { stat } from "fs";
-import path from "path";
-import { time } from "console";
-import { title } from "process";
-import { set } from "mongoose";
+import fs from "fs";
 
 const parseDocument = async (filePath, fileType, userId, documentId) => {
     try {

@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
+import { APIError } from "../utils/APIError.js";
 import { User } from "../models/user.models.js";
 import { APIResponse } from "../utils/APIResponse.js";
 import jwt from "jsonwebtoken";
@@ -20,7 +20,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
         return { accessToken, refreshToken }
     } catch (error) {
-        throw new ApiError(500, `Token generation failed: ${error.message}`)
+        throw new APIError(500, `Token generation failed: ${error.message}`)
     }
 }
 
@@ -32,19 +32,19 @@ const registerUser = asyncHandler(async (req, res) => {
     // validate if all fields are provided
     if ([name, email, password].some(
         (field) => !field || field?.trim() === "" )) {
-            throw new ApiError(400, "All fields are required")
+            throw new APIError(400, "All fields are required")
     }
 
     // email validation: must be a @nu.edu.pk email
     const emailRegex = /^[a-zA-Z0-9._%+-]+@nu\.edu\.pk$/;
     if (!emailRegex.test(email.toLowerCase())) {
-        throw new ApiError(400, "Email must be a valid @nu.edu.pk email address")
+        throw new APIError(400, "Email must be a valid @nu.edu.pk email address")
     }
 
     // password validation: min 8 characters, one capital, one special char, alphanumeric
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (!passwordRegex.test(password.trim())) {
-        throw new ApiError(400, "Password does not meet requirements. It must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.");
+        throw new APIError(400, "Password does not meet requirements. It must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.");
     }
 
     // check if user already exists
@@ -53,7 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
     })
 
     if (existingUser) {
-        throw new ApiError(409, "User already exists")
+        throw new APIError(409, "User already exists")
     }
 
     // create user
@@ -70,7 +70,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // check if user creation was successful
     if (!userCreated) {
-        throw new ApiError(500, "User creation failed")
+        throw new APIError(500, "User creation failed")
     }
 
     // return response
@@ -83,11 +83,11 @@ const loginUser = asyncHandler(async (req, res) => {
     const {email, password} = req.body
 
     if (!email  || email?.trim() === "") {
-        throw new ApiError(400, "Email is required")
+        throw new APIError(400, "Email is required")
     }
     
     if (!password  || password?.trim() === "") {    
-        throw new ApiError(400, "Password is required")
+        throw new APIError(400, "Password is required")
     }
 
     const user = await User.findOne({
@@ -95,13 +95,13 @@ const loginUser = asyncHandler(async (req, res) => {
     })
 
     if (!user) {
-        throw new ApiError(404, "User not found")
+        throw new APIError(404, "User not found")
     }
 
     const isCorrect = await user.isPasswordCorrect(password.trim())
 
     if (!isCorrect) {
-        throw new ApiError(401, "Invalid credentials")  
+        throw new APIError(401, "Invalid credentials")  
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
@@ -149,7 +149,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
     if (!incomingRefreshToken || incomingRefreshToken?.trim() === "") {
-        throw new ApiError(400, "Refresh token is required")
+        throw new APIError(400, "Refresh token is required")
     }
 
     try {
@@ -159,17 +159,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
     
         if (!decodedToken?._id) {
-            throw new ApiError(401, "Invalid refresh token")
+            throw new APIError(401, "Invalid refresh token")
         }
     
         const user = await User.findById(decodedToken._id)
     
         if (!user || !user.refreshToken) {
-            throw new ApiError(401, "Invalid refresh token")
+            throw new APIError(401, "Invalid refresh token")
         }
     
         if (user.refreshToken !== incomingRefreshToken) {
-            throw new ApiError(401, "Invalid refresh token")
+            throw new APIError(401, "Invalid refresh token")
         }
     
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
@@ -186,10 +186,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             }, "Access token refreshed successfully")
         )
     } catch (error) {
-        if (error instanceof ApiError) {
+        if (error instanceof APIError) {
             throw error
         }
-        throw new ApiError(401, error?.message || "Invalid refresh token")
+        throw new APIError(401, error?.message || "Invalid refresh token")
     }
 })
 
@@ -198,7 +198,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
 
     // Validate email
     if (!email || email?.trim() === "") {
-        throw new ApiError(400, "Email is required")
+        throw new APIError(400, "Email is required")
     }
 
     // Find user by email
@@ -236,7 +236,7 @@ const forgetPassword = asyncHandler(async (req, res) => {
         user.otpExpires = undefined
         await user.save({ validateBeforeSave: false })
 
-        throw new ApiError(500, "Failed to send OTP email. Please try again later.")
+        throw new APIError(500, "Failed to send OTP email. Please try again later.")
     }
 })
 
@@ -245,23 +245,23 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
     // Validate inputs
     if (!userId || userId?.trim() === "") {
-        throw new ApiError(400, "User ID is required")
+        throw new APIError(400, "User ID is required")
     }
 
     if (!otp || otp?.trim() === "") {
-        throw new ApiError(400, "OTP is required")
+        throw new APIError(400, "OTP is required")
     }
 
     // Find user by ID
     const user = await User.findById(userId)
 
     if (!user) {
-        throw new ApiError(404, "User not found")
+        throw new APIError(404, "User not found")
     }
 
     // Check if OTP is expired
     if (!user.otpExpires || user.otpExpires < Date.now()) {
-        throw new ApiError(400, "OTP has expired. Please request a new one.")
+        throw new APIError(400, "OTP has expired. Please request a new one.")
     }
 
     // Check max OTP attempts (max 5 attempts)
@@ -271,14 +271,14 @@ const verifyOTP = asyncHandler(async (req, res) => {
         user.otpExpires = undefined
         user.otpAttempts = 0
         await user.save({ validateBeforeSave: false })
-        throw new ApiError(429, "Too many OTP verification attempts. Please request a new OTP.")
+        throw new APIError(429, "Too many OTP verification attempts. Please request a new OTP.")
     }
 
     // Verify OTP
     if (user.otp !== otp.trim()) {
         user.otpAttempts += 1
         await user.save({ validateBeforeSave: false })
-        throw new ApiError(400, `Incorrect OTP. ${5 - user.otpAttempts} attempts remaining.`)
+        throw new APIError(400, `Incorrect OTP. ${5 - user.otpAttempts} attempts remaining.`)
     }
 
     // OTP is correct
@@ -298,29 +298,29 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     // Validate all required fields
     if (!userId || userId?.trim() === "") {
-        throw new ApiError(400, "User ID is required")
+        throw new APIError(400, "User ID is required")
     }
 
     if (!token || token?.trim() === "") {
-        throw new ApiError(400, "Reset token is required")
+        throw new APIError(400, "Reset token is required")
     }
 
     if (!newPassword || newPassword?.trim() === "") {
-        throw new ApiError(400, "New password is required")
+        throw new APIError(400, "New password is required")
     }
 
     if (!confirmPassword || confirmPassword?.trim() === "") {
-        throw new ApiError(400, "Password confirmation is required")
+        throw new APIError(400, "Password confirmation is required")
     }
 
     if (newPassword !== confirmPassword) {
-        throw new ApiError(400, "Passwords do not match")
+        throw new APIError(400, "Passwords do not match")
     }
 
     // Password validation: min 8 characters, one capital, one special char, alphanumeric
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (!passwordRegex.test(newPassword.trim())) {
-        throw new ApiError(400, "Password does not meet requirements. It must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.")
+        throw new APIError(400, "Password does not meet requirements. It must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.")
     }
 
     // Hash the token to compare with stored hash
@@ -337,7 +337,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     })
 
     if (!user) {
-        throw new ApiError(400, "Password reset token is invalid or has expired")
+        throw new APIError(400, "Password reset token is invalid or has expired")
     }
 
     // Update password and clear reset token

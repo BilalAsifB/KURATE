@@ -1,18 +1,18 @@
 import { Router } from "express";
 import {
     uploadDocument,
-    submitDocumentUrl,
+    submitDocumentURL,
     getAllDocuments,
     getDocumentById,
     deleteDocument,
-} from "../controllers/document.controller.js";
-import { veryifyJWT } from "../middlewares/auth.middlewares.js";
+} from "../controllers/document.controllers.js";
+import { verifyJWT } from "../middlewares/auth.middlewares.js";
 import { upload } from "../middlewares/upload.middlewares.js";
 
 const router = Router();
 
 // All routes are protected and require JWT verification
-router.use(veryifyJWT);
+router.use(verifyJWT);
 
 // GET all documents from authenticated user
 router.route("/").get(getAllDocuments);
@@ -24,7 +24,7 @@ router.route("/:id").get(getDocumentById);
 router.route("/upload").post(upload.single("file"), uploadDocument);
 
 // POST URL submission
-router.route("/url").post(submitDocumentUrl);
+router.route("/url").post(submitDocumentURL);
 
 // DELETE a specific document by ID
 router.route("/:id").delete(deleteDocument);

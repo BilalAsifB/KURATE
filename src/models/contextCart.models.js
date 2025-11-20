@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const contextCartSchema = new mongoose.Schema({
   user: {
@@ -19,10 +19,12 @@ const contextCartSchema = new mongoose.Schema({
     {
       type: {
         type: String,
-        enum: ['text', 'table', 'image']
+        enum: ['text', 'table', 'image'],
+        required: true
       },
       content: {
-        type: String // The raw text, markdown table, or image URL
+        type: String, // The raw text, markdown table, or image URL
+        required: true
       },
       sourceSection: {
         type: String // e.g., "Chapter 1"

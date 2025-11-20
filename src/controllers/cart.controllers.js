@@ -95,7 +95,7 @@ export const createCart = asyncHandler(async (req, res) => {
 
     // Populate document reference for response
     const populatedCart = await ContextCart
-    .findById(cart._id)
+    .findById(newCart._id)
     .populate("document", "title");
 
     return res.status(201).json(
@@ -133,8 +133,8 @@ export const updateCart = asyncHandler(async (req, res) => {
 
     // Update cart fields
     const updateData = {};
-    if (name != undefined) updateData.name = name;
-    if (snippets != undefined) updateData.snippets = snippets;
+    if (name !== undefined) updateData.name = name;
+    if (snippets !== undefined) updateData.snippets = snippets;
 
     const updatedCart = await ContextCart.findByIdAndUpdate(
         cartId,
