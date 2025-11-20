@@ -8,10 +8,10 @@ const __dirname = path.dirname(__filename);
 
 // Set up storage engine
 const storage = multer.diskStorage({
-    destination: (_, _, cb) => {
+    destination: (__, _, cb) => {
         cb(null, path.join(__dirname, "../../public/temp"));
     },
-    filename: (req, file, cb) => {
+    filename: (_, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         cb(null, file.filename + "-" + uniqueSuffix + path.extname(file.originalname));
     },
