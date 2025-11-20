@@ -1,19 +1,35 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Define your custom fonts here to use them like utility classes */
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Define custom animations directly in the theme */
+  --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+  
+  @keyframes bounce-subtle {
+    0%, 100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-5px);
+    }
+  }
+}
 
 @layer base {
   html {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
   
   body {
-    @apply antialiased;
+    @apply antialiased bg-slate-50 text-gray-900;
   }
   
   /* Monospace for code/data */
   code, kbd, samp, pre {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
   }
 }
 
@@ -97,17 +113,4 @@
 ::-moz-selection {
   background-color: #6366f1;
   color: white;
-}
-
-@keyframes bounce-subtle {
-  0%, 100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-5px);
-  }
-}
-
-.animate-bounce-subtle {
-  animation: bounce-subtle 2s ease-in-out infinite;
 }
