@@ -14,12 +14,11 @@ export default function ContentView({ content, sectionTitle, onAddSnippet }) {
       if (text.length > 0) {
         setSelectedText(text);
         
-        // Get selection position
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
         
         setButtonPosition({
-          top: rect.top + window.scrollY - 40,
+          top: rect.top + window.scrollY - 50,
           left: rect.left + window.scrollX + rect.width / 2,
         });
         
@@ -46,7 +45,6 @@ export default function ContentView({ content, sectionTitle, onAddSnippet }) {
         sourceSection: sectionTitle,
       });
       
-      // Clear selection
       window.getSelection().removeAllRanges();
       setShowAddButton(false);
       setSelectedText('');
@@ -55,19 +53,33 @@ export default function ContentView({ content, sectionTitle, onAddSnippet }) {
 
   return (
     <div className="h-full flex flex-col bg-white relative">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">{sectionTitle}</h2>
+      <div className="p-6 border-b-2 border-gray-200 bg-gradient-to-r from-white to-slate-50">
+        <h2 className="font-bold text-3xl text-gray-900 tracking-tight leading-tight">
+          {sectionTitle}
+        </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-8">
         {content ? (
           <div
-            className="prose prose-sm max-w-none select-text"
+            className="prose prose-lg max-w-none select-text
+              prose-headings:font-bold prose-headings:tracking-tight
+              prose-p:font-normal prose-p:text-gray-700 prose-p:leading-relaxed
+              prose-a:text-indigo-600 prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+              prose-strong:font-bold prose-strong:text-gray-900
+              prose-code:font-mono prose-code:text-sm prose-code:bg-indigo-50 prose-code:px-2 prose-code:py-1 prose-code:rounded
+              prose-pre:bg-gray-900 prose-pre:text-gray-100
+              "
             dangerouslySetInnerHTML={{ __html: content }}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">Select a section to view content</p>
+            <div className="text-center">
+              <div className="bg-gray-100 p-6 rounded-2xl inline-block mb-4">
+                <BookOpen className="h-16 w-16 text-gray-400" />
+              </div>
+              <p className="font-semibold text-gray-500">Select a section to view content</p>
+            </div>
           </div>
         )}
       </div>
@@ -75,15 +87,15 @@ export default function ContentView({ content, sectionTitle, onAddSnippet }) {
       {showAddButton && (
         <button
           onClick={handleAddSnippet}
-          className="fixed z-50 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
+          className="fixed z-50 inline-flex items-center px-5 py-3 border-2 border-transparent font-bold text-sm rounded-xl shadow-2xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all hover:scale-110 animate-bounce-subtle"
           style={{
             top: `${buttonPosition.top}px`,
             left: `${buttonPosition.left}px`,
             transform: 'translateX(-50%)',
           }}
         >
-          <Plus className="h-4 w-4 mr-1" />
-          Add to Cart
+          <Plus className="h-5 w-5 mr-2" />
+          <span className="tracking-wide">ADD TO CART</span>
         </button>
       )}
     </div>

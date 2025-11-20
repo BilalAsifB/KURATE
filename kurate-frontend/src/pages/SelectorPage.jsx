@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Loader, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader, AlertCircle, Globe, FileText } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import TableOfContents from '../components/selector/TableOfContents';
 import ContentView from '../components/selector/ContentView';
@@ -22,9 +22,8 @@ export default function SelectorPage() {
   useEffect(() => {
     fetchDocument();
     
-    // Clear cart when component mounts
     return () => {
-      // Optional: clear cart when leaving the page
+      // Optional: clear cart when leaving
       // clearCart();
     };
   }, [id]);
@@ -39,7 +38,6 @@ export default function SelectorPage() {
 
       if (doc.status === 'processing') {
         setError('Document is still processing. Please wait...');
-        // Poll every 2 seconds
         setTimeout(fetchDocument, 2000);
         return;
       }
@@ -52,12 +50,10 @@ export default function SelectorPage() {
 
       setDocument(doc);
 
-      // Set initial active section
       if (doc.parsedContent?.toc && doc.parsedContent.toc.length > 0) {
         const firstSection = doc.parsedContent.toc[0].sectionId;
         setActiveSection(firstSection);
         
-        // Get section content
         if (doc.parsedContent.sections) {
           const content = doc.parsedContent.sections[firstSection] || '';
           setSectionContent(content);
@@ -86,12 +82,14 @@ export default function SelectorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
         <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
           <div className="text-center">
-            <Loader className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading document...</p>
+            <Loader className="animate-spin h-20 w-20 text-indigo-600 mx-auto mb-8" />
+            <p className="font-mono font-semibold text-sm text-gray-600 tracking-widest uppercase">
+              Loading document...
+            </p>
           </div>
         </div>
       </div>
@@ -100,19 +98,21 @@ export default function SelectorPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
         <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="text-center max-w-md">
-            <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
+          <div className="text-center max-w-md bg-white p-12 rounded-2xl shadow-2xl">
+            <div className="bg-red-100 p-6 rounded-2xl inline-block mb-6">
+              <AlertCircle className="h-16 w-16 text-red-600" />
+            </div>
+            <h2 className="font-black text-3xl text-gray-900 mb-4 tracking-tight">
               {error}
             </h2>
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mt-4"
+              className="inline-flex items-center font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-4"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Dashboard
             </Link>
           </div>
@@ -123,16 +123,16 @@ export default function SelectorPage() {
 
   if (!document) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
         <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="text-center">
-            <p className="text-gray-600">Document not found</p>
+        <div className="flex items-center justify-center h-[calc(100vh-5rem)]">
+          <div className="text-center bg-white p-12 rounded-2xl shadow-2xl">
+            <p className="font-bold text-xl text-gray-900 mb-4">Document not found</p>
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mt-4"
+              className="inline-flex items-center font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-4"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Dashboard
             </Link>
           </div>
@@ -146,31 +146,43 @@ export default function SelectorPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
 
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="mr-4 text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {document.title}
-              </h1>
-              <p className="text-sm text-gray-500">
-                {document.sourceType === 'url' ? 'Web Page' : 'Uploaded File'}
-              </p>
+      {/* Header Bar */}
+      <div className="bg-white border-b-4 border-indigo-600 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center flex-1">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="mr-6 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl p-3 transition-all hover:scale-110"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+              
+              <div className="flex items-center flex-1">
+                <div className="bg-indigo-100 p-3 rounded-xl mr-4">
+                  {document.sourceType === 'url' ? (
+                    <Globe className="h-6 w-6 text-indigo-600" />
+                  ) : (
+                    <FileText className="h-6 w-6 text-indigo-600" />
+                  )}
+                </div>
+                <div>
+                  <h1 className="font-black text-2xl text-gray-900 tracking-tight">
+                    {document.title}
+                  </h1>
+                  <p className="font-mono text-xs text-gray-500 tracking-wider uppercase mt-1">
+                    {document.sourceType === 'url' ? 'Web Page' : 'Uploaded File'}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="text-sm text-gray-500">
-            {document.parsedContent?.toc?.length || 0} section(s)
+            <div className="font-mono text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-xl border-2 border-gray-200">
+              <span className="font-bold">{document.parsedContent?.toc?.length || 0}</span> sections
+            </div>
           </div>
         </div>
       </div>
@@ -180,7 +192,7 @@ export default function SelectorPage() {
         <div className="h-full max-w-7xl mx-auto">
           <div className="grid grid-cols-12 gap-0 h-full">
             {/* Left Panel - Table of Contents (20%) */}
-            <div className="col-span-2 h-full overflow-hidden">
+            <div className="col-span-2 h-full overflow-hidden shadow-2xl">
               <TableOfContents
                 toc={document.parsedContent?.toc || []}
                 activeSection={activeSection}
@@ -189,7 +201,7 @@ export default function SelectorPage() {
             </div>
 
             {/* Middle Panel - Content View (50%) */}
-            <div className="col-span-6 h-full overflow-hidden">
+            <div className="col-span-6 h-full overflow-hidden shadow-2xl">
               <ContentView
                 content={sectionContent}
                 sectionTitle={currentSection?.title || 'Content'}
@@ -198,7 +210,7 @@ export default function SelectorPage() {
             </div>
 
             {/* Right Panel - Context Cart (30%) */}
-            <div className="col-span-4 h-full overflow-hidden">
+            <div className="col-span-4 h-full overflow-hidden shadow-2xl">
               <ContextCart documentId={document._id} />
             </div>
           </div>

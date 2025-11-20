@@ -1,1 +1,113 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply antialiased;
+  }
+  
+  /* Monospace for code/data */
+  code, kbd, samp, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  /* Display text - ultra bold, large */
+  .text-display {
+    @apply font-bold text-6xl md:text-8xl tracking-tight;
+  }
+  
+  /* Heading hierarchy with extreme weights */
+  .text-mega {
+    @apply font-black text-5xl md:text-7xl tracking-tight;
+  }
+  
+  .text-hero {
+    @apply font-bold text-4xl md:text-6xl tracking-tight;
+  }
+  
+  .text-headline {
+    @apply font-semibold text-3xl md:text-5xl tracking-tight;
+  }
+  
+  /* Body text - lighter weights */
+  .text-body-lg {
+    @apply font-light text-lg md:text-xl leading-relaxed;
+  }
+  
+  .text-body {
+    @apply font-normal text-base leading-relaxed;
+  }
+  
+  /* Monospace variants */
+  .text-mono-lg {
+    @apply font-mono font-light text-lg tracking-wide;
+  }
+  
+  .text-mono {
+    @apply font-mono font-normal text-sm tracking-wide;
+  }
+  
+  .text-mono-bold {
+    @apply font-mono font-bold text-sm tracking-wide;
+  }
+  
+  /* Labels and UI elements */
+  .text-label {
+    @apply font-medium text-xs uppercase tracking-widest;
+  }
+  
+  .text-label-lg {
+    @apply font-semibold text-sm uppercase tracking-wider;
+  }
+}
+
+/* Custom scrollbar with personality */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 6px;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}
+
+/* Selection styling */
+::selection {
+  background-color: #6366f1;
+  color: white;
+}
+
+::-moz-selection {
+  background-color: #6366f1;
+  color: white;
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
