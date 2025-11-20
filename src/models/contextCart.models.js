@@ -29,10 +29,8 @@ const contextCartSchema = new mongoose.Schema({
       }
     }
   ],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+}, {timestamps: true});
+
+contextCartSchema.index({ user: 1, document: 1 });
 
 export const ContextCart = mongoose.model('ContextCart', contextCartSchema);

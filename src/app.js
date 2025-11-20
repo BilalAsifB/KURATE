@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.routes.js";
+import documentRouter from "./routes/document.routes.js";
+import cartRouter from "./routes/cart.routes.js";
 
 const app = express();
 
@@ -25,6 +27,7 @@ app.use(cookieParser());
 // Routes
 app.use("/api/users", userRouter);
 app.use("/api/documents", documentRouter);
+app.use("/api/cart", cartRouter);
 
 // Basic health check route
 app.get("/", (_, res) => {
