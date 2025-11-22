@@ -1,6 +1,6 @@
 import api from "./axios";
 
-export const documentAPI = {
+export const documentsAPI = {
     getAllDocuments: async () => {
         const response = await api.get("/documents");
         return response.data;
