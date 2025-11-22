@@ -2,12 +2,12 @@ import api from "./axios";
 
 export const cartsAPI = {
     getAllUserCarts: async () => {
-        const response = await api.get("/carts");
+        const response = await api.get("/cart");
         return response.data;
     },
 
     getCartsByDocument: async (documentId) => {
-        const response = await api.get(`/carts/document/${documentId}`);
+        const response = await api.get(`/cart/document/${documentId}`);
         return response.data;
     },
 

@@ -26,9 +26,10 @@ export const authAPI = {
         return response.data;
     },
 
-    changePassword: async (userId, newPassword, confirmPassword) => {
-        const response = await api.post("/users/change-password", {
+    resetPassword: async (userId, newPassword, confirmPassword) => {
+        const response = await api.post("/users/reset-password", {
             userId,
+            token: "",
             newPassword,
             confirmPassword,
         });
