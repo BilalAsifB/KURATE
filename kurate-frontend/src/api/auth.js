@@ -26,10 +26,9 @@ export const authAPI = {
         return response.data;
     },
 
-    resetPassword: async (userId, token, newPassword, confirmPassword) => {
-        const response = await api.post("/users/reset-password", {
+    changePassword: async (userId, newPassword, confirmPassword) => {
+        const response = await api.post("/users/change-password", {
             userId,
-            token,
             newPassword,
             confirmPassword,
         });
@@ -37,7 +36,7 @@ export const authAPI = {
     },
 
     refreshToken: async (refreshToken) => {
-        const response = await api.post("/auth/refresh-token", { refreshToken });
+        const response = await api.post("/users/refresh-token", { refreshToken });
         return response.data;
     },
 };

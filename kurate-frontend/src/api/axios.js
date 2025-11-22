@@ -12,7 +12,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("acessToken");
+        const token = localStorage.getItem("accessToken");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -34,12 +34,12 @@ api.interceptors.response.use(
                 const refreshToken = localStorage.getItem("refreshToken");
                 const response = await axios.post(
                     `${API_BASE_URL}/users/refresh-token`,
-                    { token: refreshToken },
+                    { refreshToken },
                     { withCredentials: true }   
                 );
 
                 const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-                localStorage.setItem("acessToken", accessToken);
+                localStorage.setItem("accessToken", accessToken);
                 localStorage.setItem("refreshToken", newRefreshToken);
 
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;

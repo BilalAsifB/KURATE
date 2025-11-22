@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await authAPI.resetPassword(userId, '', newPassword, confirmPassword);
+      await authAPI.changePassword(userId, newPassword, confirmPassword);
       alert('Password reset successful!');
       navigate('/login');
     } catch (err) {
