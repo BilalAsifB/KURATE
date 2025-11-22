@@ -1,6 +1,6 @@
 import EPub from "epub2";
 import mammoth from "mammoth";
-import * as pdfjsLib from "pdfjs-dist";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import fs from "fs";
 
 const createParsedContent = (toc, sections, images = []) => ({
