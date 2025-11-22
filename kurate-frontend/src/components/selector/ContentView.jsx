@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import DOMPurify from "dompurify";
 
 export default function ContentView({ content, sectionTitle, onAddSnippet }) {
