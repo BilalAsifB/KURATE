@@ -1,37 +1,85 @@
-import os
-import boto3
+import io
+import logging
 import uuid
-from botocore.exceptions import NoCredentialsError
+
+import boto3
+from botocore.client import Config as BotoConfig
+from botocore.exceptions import BotoCoreError, ClientError
+
+from src.config import get_settings
+
+logger = logging.getLogger(__name__)
+
 
 class S3Uploader:
+    """Thin wrapper around boto3 for uploading cropped figure/table images.
+
+    Supports both AWS S3 and S3-compatible stores (e.g. MinIO) via
+    `S3_ENDPOINT_URL`. Falls back to a local mock URL when no bucket is
+    configured so the pipeline remains runnable without cloud credentials.
+    """
+
     def __init__(self):
-        self.s3_client = boto3.client(
-            's3',
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-            region_name=os.getenv('AWS_REGION', 'us-east-1')
-        )
-        self.bucket_name = os.getenv('S3_BUCKET_NAME')
+        settings = get_settings()
+        self.bucket_name = settings.s3_bucket_name
+        self.public_base_url = settings.s3_public_base_url
+        self.endpoint_url = settings.s3_endpoint_url
+        self.region = settings.aws_region
 
-    def upload_image(self, image_bytes: bytes, document_id: str, extension: str = "png") -> str:
-        """Uploads raw image bytes to S3 and returns the public URL."""
-        if not self.bucket_name:
-            # Fallback for local testing if S3 isn't configured yet
-            return f"local_mock_url/{document_id}/{uuid.uuid4()}.{extension}"
+        self._client = None
+        if self.bucket_name:
+            client_kwargs = {
+                "service_name": "s3",
+                "region_name": self.region,
+            }
+            if settings.aws_access_key_id and settings.aws_secret_access_key:
+                client_kwargs["aws_access_key_id"] = settings.aws_access_key_id
+                client_kwargs["aws_secret_access_key"] = settings.aws_secret_access_key
+            if self.endpoint_url:
+                client_kwargs["endpoint_url"] = self.endpoint_url
+            if settings.s3_force_path_style:
+                client_kwargs["config"] = BotoConfig(s3={"addressing_style": "path"})
 
-        image_key = f"assets/{document_id}/{uuid.uuid4()}.{extension}"
-        
+            self._client = boto3.client(**client_kwargs)
+
+    @property
+    def is_configured(self) -> bool:
+        return self._client is not None
+
+    def upload_image(
+        self,
+        image_bytes: bytes,
+        document_id: str,
+        extension: str = "png",
+        content_type: str = "image/png",
+    ) -> str:
+        """Uploads raw image bytes and returns a public(-ish) URL.
+
+        If no bucket is configured, returns a deterministic local mock URL
+        so downstream Markdown still has a stable reference during local dev.
+        """
+        asset_id = uuid.uuid4().hex
+        image_key = f"assets/{document_id}/{asset_id}.{extension}"
+
+        if not self.is_configured:
+            return f"local-mock://{image_key}"
+
         try:
-            self.s3_client.put_object(
-                Bucket=self.bucket_name,
-                Key=image_key,
-                Body=image_bytes,
-                ContentType=f'image/{extension}',
-                # ACL='public-read' # Uncomment if your bucket allows public ACLs
+            self._client.upload_fileobj(
+                io.BytesIO(image_bytes),
+                self.bucket_name,
+                image_key,
+                ExtraArgs={"ContentType": content_type},
             )
-            # Construct the public URL (Assumes standard AWS S3 format)
-            return f"https://{self.bucket_name}.s3.amazonaws.com/{image_key}"
-        except NoCredentialsError:
-            print("S3 Credentials not available.")
-            return None
-            
+        except (BotoCoreError, ClientError) as exc:
+            logger.error("Failed to upload asset %s: %s", image_key, exc)
+            return f"local-mock://{image_key}"
+
+        return self._build_public_url(image_key)
+
+    def _build_public_url(self, key: str) -> str:
+        if self.public_base_url:
+            return f"{self.public_base_url.rstrip('/')}/{key}"
+        if self.endpoint_url:
+            return f"{self.endpoint_url.rstrip('/')}/{self.bucket_name}/{key}"
+        return f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com/{key}"
