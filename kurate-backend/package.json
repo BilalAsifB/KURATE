@@ -1,31 +1,28 @@
 {
-  "name": "kurate",
+  "name": "kurate-backend",
   "version": "1.0.0",
-  "description": "Kurate: Load your Context Cart.",
+  "description": "Kurate orchestrator & prompt registry - Node.js / Express / PostgreSQL / MCP",
   "type": "module",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon -r dotenv/config src/index.js"
+    "start": "node src/server.js",
+    "dev": "nodemon -r dotenv/config src/server.js",
+    "mcp": "node src/mcp-server.js",
+    "migrate": "node src/database/migrate.js"
   },
   "author": "Bilal Asif Burney",
   "license": "ISC",
   "dependencies": {
-    "@mozilla/readability": "^0.6.0",
+    "@modelcontextprotocol/sdk": "^1.5.0",
     "axios": "^1.13.2",
-    "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "epub2": "^3.0.2",
     "express": "^5.1.0",
+    "form-data": "^4.0.1",
     "express-rate-limit": "^8.2.1",
-    "jsdom": "^27.2.0",
-    "jsonwebtoken": "^9.0.2",
-    "mammoth": "^1.11.0",
-    "mongoose": "^8.20.0",
     "multer": "^2.0.2",
-    "pdfjs-dist": "^5.4.394",
-    "resend": "^6.4.2"
+    "pg": "^8.13.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.11",
