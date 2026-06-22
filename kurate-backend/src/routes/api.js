@@ -1,27 +1,12 @@
 import { Router } from "express";
 import multer from "multer";
-import {
-  uploadDocument,
-  listAllDocuments,
-  getDocument,
-  removeDocument,
-} from "../controllers/documentController.js";
-import {
-  savePromptVersion,
-  listAllPrompts,
-  listVersions,
-  getPrompt,
-} from "../controllers/promptController.js";
+import { uploadDocument, listAllDocuments, getDocument, removeDocument } from "../controllers/documentController.js";
+import { savePromptVersion, listAllPrompts, listVersions, getPrompt } from "../controllers/promptController.js";
 import { checkParserHealth } from "../services/parserClient.js";
 
 const router = Router();
-
 const MAX_UPLOAD_BYTES = (Number(process.env.MAX_UPLOAD_SIZE_MB) || 50) * 1024 * 1024;
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_UPLOAD_BYTES },
-});
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_UPLOAD_BYTES } });
 
 router.post("/documents", upload.single("file"), uploadDocument);
 router.get("/documents", listAllDocuments);

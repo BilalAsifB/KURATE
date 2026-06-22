@@ -1,10 +1,8 @@
-# --- Build stage: install dependencies ---
 FROM node:20-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
-# --- Runtime stage ---
 FROM node:20-slim
 WORKDIR /app
 ENV NODE_ENV=production

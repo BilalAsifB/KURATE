@@ -1,7 +1,3 @@
--- Kurate registry schema
--- Tables: documents, chunks, prompts, prompt_versions
--- Run via `npm run migrate` (src/database/migrate.js)
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS documents (
@@ -26,7 +22,6 @@ CREATE TABLE IF NOT EXISTS chunks (
     content         TEXT NOT NULL,
     metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-
     UNIQUE (document_id, chunk_order)
 );
 
@@ -53,7 +48,6 @@ CREATE TABLE IF NOT EXISTS prompt_versions (
     cart_items      JSONB NOT NULL DEFAULT '[]'::jsonb,
     compiled_prompt TEXT NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-
     UNIQUE (prompt_id, version)
 );
 

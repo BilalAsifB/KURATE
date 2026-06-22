@@ -2,12 +2,9 @@ import axios from "axios";
 import FormData from "form-data";
 
 const PARSER_BASE_URL = process.env.PARSER_SERVICE_URL || "http://localhost:8000";
-const PARSER_TIMEOUT_MS = Number(process.env.PARSER_TIMEOUT_MS) || 5 * 60 * 1000; // 5 min
+const PARSER_TIMEOUT_MS = Number(process.env.PARSER_TIMEOUT_MS) || 5 * 60 * 1000;
 
-const client = axios.create({
-  baseURL: PARSER_BASE_URL,
-  timeout: PARSER_TIMEOUT_MS,
-});
+const client = axios.create({ baseURL: PARSER_BASE_URL, timeout: PARSER_TIMEOUT_MS });
 
 export async function parseDocument(fileBuffer, filename, mimetype) {
   const form = new FormData();

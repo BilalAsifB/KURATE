@@ -15,25 +15,17 @@ export function compilePrompt({ instructions, items }) {
 
 function renderChunk(chunk) {
   if (!chunk) return "";
-
-  switch (chunk.type) {
-    case "image": {
-      const alt = chunk.metadata?.caption || "image";
-      return chunk.content ? `![${alt}](${chunk.content})` : "";
-    }
-    default:
-      return chunk.content;
+  if (chunk.type === "image") {
+    const alt = chunk.metadata?.caption || "image";
+    return chunk.content ? `![${alt}](${chunk.content})` : "";
   }
+  return chunk.content;
 }
 
 export function resolveCartItems(cartItems, chunkRows) {
   const chunkMap = new Map(chunkRows.map((c) => [c.id, c]));
-
   return [...cartItems]
     .sort((a, b) => a.order - b.order)
-    .map((item) => ({
-      order: item.order,
-      chunk: chunkMap.get(item.chunk_id) || null,
-    }))
+    .map((item) => ({ order: item.order, chunk: chunkMap.get(item.chunk_id) || null }))
     .filter((item) => item.chunk !== null);
 }
