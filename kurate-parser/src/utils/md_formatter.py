@@ -1,7 +1,5 @@
-"""Utilities for turning a Docling document tree into granular,
-UI-ready chunks that the kurate-backend can persist directly as
-`chunks` rows (one row per structural element: text, table, image, code).
-"""
+"""Converts a Docling document tree into granular, UI-ready chunks
+that kurate-backend persists as `chunks` rows."""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -20,7 +18,7 @@ class Chunk:
 
     order: int
     type: str  # "text" | "heading" | "table" | "image" | "code" | "formula" | "list_item"
-    content: str  # markdown for text-like chunks, asset URL for images
+    content: str
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,7 +30,6 @@ class Chunk:
         }
 
 
-# Maps Docling's DocItemLabel values to Kurate's simplified chunk types.
 _LABEL_TO_TYPE = {
     DocItemLabel.TITLE: "heading",
     DocItemLabel.SECTION_HEADER: "heading",
@@ -50,18 +47,7 @@ def build_chunks(
     doc: DoclingDocument,
     image_urls: dict[int, str],
 ) -> list[dict[str, Any]]:
-    """Walks the document tree in reading order and emits one Chunk per
-    structural element.
-
-    Args:
-        doc: The parsed Docling document.
-        image_urls: Mapping of `id(item)` -> uploaded asset URL, populated
-            by the image-interception step in pipeline.py.
-
-    Returns:
-        A list of plain dicts (JSON-serializable) ready to send to the
-        kurate-backend's chunk-ingestion endpoint.
-    """
+    """Walks the document tree in reading order and emits one Chunk per element."""
     chunks: list[dict[str, Any]] = []
     order = 0
 
@@ -81,7 +67,6 @@ def _convert_item(
     order: int,
     image_urls: dict[int, str],
 ) -> Chunk | None:
-    # --- Tables ---
     if isinstance(item, TableItem):
         return Chunk(
             order=order,
@@ -95,7 +80,6 @@ def _convert_item(
             },
         )
 
-    # --- Pictures / figures ---
     if isinstance(item, PictureItem):
         asset_url = image_urls.get(id(item))
         return Chunk(
@@ -109,18 +93,15 @@ def _convert_item(
             },
         )
 
-    # --- Text-like items (paragraphs, headings, code, formulas, list items) ---
     label = getattr(item, "label", None)
     text = getattr(item, "text", None)
     if text is None:
         return None
-
     text = text.strip()
     if not text:
         return None
 
     chunk_type = _LABEL_TO_TYPE.get(label, "text")
-
     metadata: dict[str, Any] = {
         "self_ref": getattr(item, "self_ref", None),
         "label": label.value if label is not None else None,
@@ -128,13 +109,15 @@ def _convert_item(
     if chunk_type == "heading":
         metadata["level"] = getattr(item, "level", None)
 
-    rendered = _render_text_chunk(item, chunk_type, text)
-
-    return Chunk(order=order, type=chunk_type, content=rendered, metadata=metadata)
+    return Chunk(
+        order=order,
+        type=chunk_type,
+        content=_render_text_chunk(item, chunk_type, text),
+        metadata=metadata,
+    )
 
 
 def _render_text_chunk(item: Any, chunk_type: str, text: str) -> str:
-    """Renders a text-like item as standalone Markdown."""
     if chunk_type == "heading":
         level = getattr(item, "level", 1) or 1
         prefix = "#" * min(max(level, 1), 6)

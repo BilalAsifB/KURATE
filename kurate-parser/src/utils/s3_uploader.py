@@ -12,11 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class S3Uploader:
-    """Thin wrapper around boto3 for uploading cropped figure/table images.
+    """Uploads cropped figure/table images to S3 or MinIO.
 
-    Supports both AWS S3 and S3-compatible stores (e.g. MinIO) via
-    `S3_ENDPOINT_URL`. Falls back to a local mock URL when no bucket is
-    configured so the pipeline remains runnable without cloud credentials.
+    Falls back to a local mock URL when no bucket is configured so the
+    pipeline remains runnable without cloud credentials during development.
     """
 
     def __init__(self):
@@ -53,11 +52,6 @@ class S3Uploader:
         extension: str = "png",
         content_type: str = "image/png",
     ) -> str:
-        """Uploads raw image bytes and returns a public(-ish) URL.
-
-        If no bucket is configured, returns a deterministic local mock URL
-        so downstream Markdown still has a stable reference during local dev.
-        """
         asset_id = uuid.uuid4().hex
         image_key = f"assets/{document_id}/{asset_id}.{extension}"
 
