@@ -150,7 +150,7 @@ export default function PromptSaver({ onClose }) {
             </button>
           )}
           {saved && (
-            
+            <a
               href={`http://localhost:4000/api/v1/prompts/${namespace}`}
               target="_blank"
               rel="noreferrer"
