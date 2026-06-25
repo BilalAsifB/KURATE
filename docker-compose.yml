@@ -1,0 +1,132 @@
+name: kurate
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kurate-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PGUSER:-postgres}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-postgres}
+      POSTGRES_DB: ${PGDATABASE:-kurate}
+    ports:
+      - "${PGPORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-postgres} -d ${PGDATABASE:-kurate}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: kurate-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-kurate}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-kurate-dev-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: kurate-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-kurate} ${MINIO_ROOT_PASSWORD:-kurate-dev-secret} &&
+      mc mb -p local/${S3_BUCKET_NAME:-kurate-assets} &&
+      mc anonymous set download local/${S3_BUCKET_NAME:-kurate-assets}
+      "
+    restart: "no"
+
+  parser:
+    build:
+      context: ./kurate-parser
+    container_name: kurate-parser
+    restart: unless-stopped
+    environment:
+      DO_OCR: "true"
+      DO_TABLE_STRUCTURE: "true"
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-kurate-assets}
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_PUBLIC_BASE_URL: http://localhost:9000/${S3_BUCKET_NAME:-kurate-assets}
+      S3_FORCE_PATH_STYLE: "true"
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-kurate}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-kurate-dev-secret}
+      AWS_REGION: us-east-1
+    ports:
+      - "8000:8000"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./kurate-backend
+    container_name: kurate-backend
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: postgres://${PGUSER:-postgres}:${PGPASSWORD:-postgres}@postgres:5432/${PGDATABASE:-kurate}
+      PARSER_SERVICE_URL: http://parser:8000
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      parser:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  migrate:
+    build:
+      context: ./kurate-backend
+    container_name: kurate-migrate
+    environment:
+      DATABASE_URL: postgres://${PGUSER:-postgres}:${PGPASSWORD:-postgres}@postgres:5432/${PGDATABASE:-kurate}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["node", "src/database/migrate.js"]
+    profiles: ["tools"]
+
+  frontend:
+    build:
+      context: ./kurate-frontend
+    container_name: kurate-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:4000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  minio_data:
