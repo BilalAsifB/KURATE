@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Notebook {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  pages       Page[]
+
+  @@map("notebooks")
+}
+
+model Page {
+  id         Int      @id @default(autoincrement())
+  notebookId Int     @map("notebook_id")
+  title      String
+  goal       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  entries    Entry[]
+
+  @@index([notebookId])
+  @@map("pages")
+}
+
+model Entry {
+  id         Int      @id @default(autoincrement())
+  pageId     Int     @map("page_id")
+  version    Int
+  promptText String  @map("prompt_text")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  page       Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, version])
+  @@index([pageId])
+  @@index([pageId, version])
+  @@map("entries")
+}
